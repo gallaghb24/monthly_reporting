@@ -46,7 +46,7 @@ if uploaded_file:
             col1.metric("New Artworks", num_new_artworks)
             col2.metric("Total Amends", total_amends)
             col3.metric("Right First Time", f"{num_rft} ({rft_percentage}%)")
-            col4, col5 = st.columns(2)
+            col4, col5, col6 = st.columns(3)
             col4.metric("Average Amend Rate", avg_amends)
             col5.metric("Artworks Beyond V3", f"{over_v3} ({over_v3_pct}%)")
 
