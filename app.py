@@ -65,10 +65,21 @@ if uploaded_file:
             st.subheader("Average Rounds of Amends by Area")
             st.dataframe(table_2, use_container_width=True)
 
+            # === Version Breakdown Table ===
+            version_counts = df[client_col].value_counts().sort_index()
+            version_table = pd.DataFrame([version_counts])
+            version_table.index = ["Amends"]
+            version_table.columns = [f"V{int(col)}" for col in version_table.columns]
+            version_display = version_table.reset_index().rename(columns={"index": ""})
+
+            st.subheader("📊 Volume by Version Number")
+            st.dataframe(version_display, use_container_width=True)
+
             # Optional export
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 summary_display.to_excel(writer, index=False, sheet_name="Summary")
+                version_display.to_excel(writer, index=False, sheet_name="Version Breakdown")
 
             st.download_button(
                 label="📅 Download Summary Table",
