@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.set_page_config(page_title="Monthly Artwork Analysis", layout="wide")
-st.title("🎨 Monthly Artwork Versions Analysis")
+st.set_page_config(page_title="Content Production Analysis", layout="wide")
+st.title("Content Production Analysis")
 
-st.markdown("Upload your Excel file below (with headers in row 2) — we’ll analyse amends, right-first-time rate, and show a category breakdown 👇")
+st.markdown("Upload your Monthly Versions Client Excel Export below  — we’ll analyse amends, right-first-time rate, and show a category breakdowns ready to copy and paste into Keynote")
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
@@ -41,43 +41,7 @@ if uploaded_file:
             over_v3 = df[df[client_col] > 3].shape[0]
             over_v3_pct = round((over_v3 / num_new_artworks) * 100, 1)
 
-            st.subheader("📈 Overall Stats")
-            col1, col2, col3 = st.columns(3)
-            col1.metric("New Artworks", num_new_artworks)
-            col2.metric("Total Amends", total_amends)
-            col3.metric("Right First Time", f"{num_rft} ({rft_percentage}%)")
-            col4, col5, col6 = st.columns(3)
-            col4.metric("Average Amend Rate", avg_amends)
-            col5.metric("Artworks Beyond V3", f"{over_v3} ({over_v3_pct}%)")
-
-            # === Category Breakdown Tables ===
-            summary = pd.DataFrame()
-            categories = sorted(df["Category"].dropna().unique())
-            summary.loc["New Artwork Lines", categories] = df.groupby("Category").size()
-            summary.loc["Amends", categories] = df.groupby("Category")["Amends"].sum()
-            summary.loc["Right First Time", categories] = df.groupby("Category")["Right First Time"].sum()
-            summary.loc["Average Round of Amends", categories] = df.groupby("Category")["Amends"].mean().round(2)
-
-            summary_display = summary.reset_index().rename(columns={"index": ""})
-
-            # Split into two tables
-            table_1 = summary_display[summary_display[""] != "Average Round of Amends"]
-            table_2 = summary_display[summary_display[""] == "Average Round of Amends"]
-
-            st.subheader("📊 Volume by Area")
-            st.dataframe(table_1, use_container_width=True)
-
-            st.subheader("Average Rounds of Amends by Area")
-            st.dataframe(table_2, use_container_width=True)
-
-            # === Version Breakdown Table ===
-            version_counts = df[client_col].value_counts().sort_index()
-            version_table = pd.DataFrame([version_counts])
-            version_table.index = ["Amends"]
-            version_table.columns = [f"V{int(col)}" for col in version_table.columns]
-            version_display = version_table.reset_index().rename(columns={"index": ""})
-
-            st.subheader("📊 Volume by Version Number")
+            st.subheader("Volume by Version Number")
             st.dataframe(version_display, use_container_width=True)
 
             # Optional export
@@ -87,7 +51,7 @@ if uploaded_file:
                 version_display.to_excel(writer, index=False, sheet_name="Version Breakdown")
 
             st.download_button(
-                label="📅 Download Summary Table",
+                label="Download Summary Table",
                 data=output.getvalue(),
                 file_name="content_creation_summary.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
