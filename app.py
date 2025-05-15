@@ -48,7 +48,7 @@ if uploaded_file:
             col3.metric("Right First Time", f"{num_rft} ({rft_percentage}%)")
             col4, col5 = st.columns(2)
             col4.metric("Average Amend Rate", avg_amends)
-            col5.metric("Artworks Beyond V3", f"{over_v3} ({over_v3_pct}%)"))
+            col5.metric("Artworks Beyond V3", f"{over_v3} ({over_v3_pct}%)")
 
             # === Category Breakdown Tables ===
             summary = pd.DataFrame()
