@@ -99,8 +99,8 @@ with tab1:
 
 with tab2:
     st.header("Stock Order Analysis")
-    st.markdown("Upload stock data below to generate summary statistics.")
-    stock_file = st.file_uploader("Upload your Stock Excel file", type=["xlsx"], key="stock_upload")
+    st.markdown("Upload Order Line Level  Data Export for the month below to generate summary stats")
+    stock_file = st.file_uploader("Upload your Excel file", type=["xlsx"], key="stock_upload")
     if stock_file:
         try:
             df_stock = pd.read_excel(stock_file, header=1)
