@@ -1,30 +1,27 @@
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 
 st.set_page_config(page_title="Monthly Artwork Analysis", layout="wide")
 st.title("🎨 Monthly Artwork Versions Analysis")
 
-st.markdown("Upload your Excel file below (with headers in row 2) — we'll handle the rest 👇")
+st.markdown("Upload your Excel file below (with headers in row 2) — we’ll analyse amends, right-first-time rate, and more 👇")
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
 if uploaded_file:
     try:
         xls = pd.ExcelFile(uploaded_file)
-        # Read from second row (index 1), which has the headers
         df = pd.read_excel(xls, sheet_name="general_report", header=1)
 
-        st.subheader("📋 Column Preview")
-        st.write("Here are the detected column names:")
-        st.write(list(df.columns))
-
-        # Match actual column names safely
+        # Column name safety
         col_map = {col.strip().lower(): col for col in df.columns}
         if "client versions" not in col_map:
             st.error("❌ Couldn’t find a column called 'Client Versions' in row 2. Please check your file.")
         else:
             client_col = col_map["client versions"]
 
+            # Data transformations
             df = df.sort_values(by=client_col, ascending=False)
             df = df.drop_duplicates(subset=["POS Code"], keep="first")
             df = df[df[client_col] != 0]
@@ -34,7 +31,7 @@ if uploaded_file:
             df.loc[df["Category"].isin(["Members", "Starbuys"]), "Category"] = "Main Event"
             df.loc[df["Category"].isin(["Loyalty / CRM", "Mobile"]), "Category"] = "Other"
 
-            # Metrics
+            # Stats
             num_new_artworks = len(df)
             total_amends = df["Amends"].sum()
             num_rft = df["Right First Time"].sum()
@@ -53,7 +50,16 @@ if uploaded_file:
             with st.expander("🔍 View Processed Data"):
                 st.dataframe(df, use_container_width=True)
 
-            st.download_button("📥 Download Cleaned Data", df.to_excel(index=False), file_name="processed_artwork_data.xlsx")
+            # Prepare Excel download
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False)
+            st.download_button(
+                label="📥 Download Cleaned Data",
+                data=output.getvalue(),
+                file_name="processed_artwork_data.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     except Exception as e:
         st.error("❌ There was an issue processing your file.")
