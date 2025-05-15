@@ -102,4 +102,33 @@ with tab2:
     st.markdown("Upload stock data below to generate summary statistics.")
     stock_file = st.file_uploader("Upload your Stock Excel file", type=["xlsx"], key="stock_upload")
     if stock_file:
-        st.success("Stock data uploaded! (Summary analysis functionality coming soon.)")
+        try:
+            df_stock = pd.read_excel(stock_file, header=1)
+
+            # Categorise Order Type
+            df_stock["Order Type"] = df_stock["Ordered By"].str.lower().str.contains("store")
+            df_stock["Order Type"] = df_stock["Order Type"].map({True: "Store Order", False: "Helpdesk Order"})
+
+            # Count unique order numbers per order type
+            unique_orders = df_stock.drop_duplicates(subset=["Order Number"])
+            order_type_counts = unique_orders["Order Type"].value_counts().reset_index()
+            order_type_counts.columns = ["Order Type", "Unique Order Count"]
+
+            st.subheader("Order Type Breakdown")
+            st.dataframe(order_type_counts, use_container_width=True)
+
+            # Top 10 locations by order line volume
+            top_locations = (
+                df_stock.groupby(["Location Code", "Location Name"])
+                .size()
+                .reset_index(name="Order Line Count")
+                .sort_values(by="Order Line Count", ascending=False)
+                .head(10)
+            )
+
+            st.subheader("Top 10 Locations by Order Line Volume")
+            st.dataframe(top_locations, use_container_width=True)
+
+        except Exception as e:
+            st.error("There was an issue processing the stock order file.")
+            st.exception(e)
