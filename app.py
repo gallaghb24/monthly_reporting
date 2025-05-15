@@ -63,11 +63,11 @@ with tab1:
                 table_1 = summary_display[summary_display[""] != "Average Round of Amends"]
                 table_2 = summary_display[summary_display[""] == "Average Round of Amends"]
 
-                st.markdown("Tables ready to paste into Keynote charts")
-                st.subheader("Volume by Area")
+                st.subheader("Tables ready to paste into Keynote charts")
+                st.markdown("### Volume by Area")
                 st.dataframe(table_1, use_container_width=True)
 
-                st.subheader("Average Rounds of Amends by Area")
+                st.markdown("### Average Rounds of Amends by Area")
                 st.dataframe(table_2, use_container_width=True)
 
                 version_counts = df[client_col].value_counts().sort_index()
@@ -76,7 +76,7 @@ with tab1:
                 version_table.columns = [f"V{int(col)}" for col in version_table.columns]
                 version_display = version_table.reset_index().rename(columns={"index": ""})
 
-                st.subheader("Volume by Version Number")
+                st.markdown("### Volume by Version Number")
                 st.dataframe(version_display, use_container_width=True)
 
                 output = BytesIO()
