@@ -17,7 +17,7 @@ if uploaded_file:
         # Column name matching
         col_map = {col.strip().lower(): col for col in df.columns}
         if "client versions" not in col_map:
-            st.error("❌ Couldn’t find a column called 'Client Versions'. Please check your file.")
+            st.error("Couldn’t find a column called 'Client Versions'. Please check your file.")
         else:
             client_col = col_map["client versions"]
 
@@ -37,9 +37,43 @@ if uploaded_file:
             num_rft = df["Right First Time"].sum()
             rft_percentage = round((num_rft / num_new_artworks) * 100, 1)
             avg_amends = round(df["Amends"].mean(), 2)
-
             over_v3 = df[df[client_col] > 3].shape[0]
             over_v3_pct = round((over_v3 / num_new_artworks) * 100, 1)
+
+            st.subheader("Overall Stats")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("New Artworks", num_new_artworks)
+            col2.metric("Total Amends", total_amends)
+            col3.metric("Right First Time", f"{num_rft} ({rft_percentage}%)")
+
+            col4, col5, col6 = st.columns(3)
+            col4.metric("Average Amend Rate", avg_amends)
+            col5.metric("Artworks Beyond V3", f"{over_v3} ({over_v3_pct}%)")
+
+            # === Category Breakdown Tables ===
+            summary = pd.DataFrame()
+            categories = sorted(df["Category"].dropna().unique())
+            summary.loc["New Artwork Lines", categories] = df.groupby("Category").size()
+            summary.loc["Amends", categories] = df.groupby("Category")["Amends"].sum()
+            summary.loc["Right First Time", categories] = df.groupby("Category")["Right First Time"].sum()
+            summary.loc["Average Round of Amends", categories] = df.groupby("Category")["Amends"].mean().round(2)
+
+            summary_display = summary.reset_index().rename(columns={"index": ""})
+            table_1 = summary_display[summary_display[""] != "Average Round of Amends"]
+            table_2 = summary_display[summary_display[""] == "Average Round of Amends"]
+
+            st.subheader("Volume by Area")
+            st.dataframe(table_1, use_container_width=True)
+
+            st.subheader("Average Rounds of Amends by Area")
+            st.dataframe(table_2, use_container_width=True)
+
+            # === Version Breakdown Table ===
+            version_counts = df[client_col].value_counts().sort_index()
+            version_table = pd.DataFrame([version_counts])
+            version_table.index = ["Amends"]
+            version_table.columns = [f"V{int(col)}" for col in version_table.columns]
+            version_display = version_table.reset_index().rename(columns={"index": ""})
 
             st.subheader("Volume by Version Number")
             st.dataframe(version_display, use_container_width=True)
@@ -58,7 +92,7 @@ if uploaded_file:
             )
 
     except Exception as e:
-        st.error("❌ There was an issue processing your file.")
+        st.error("There was an issue processing your file.")
         st.exception(e)
 else:
-    st.info("👇 Please upload a .xlsx file to get started.")
+    st.info("Please upload a .xlsx file to get started.")
