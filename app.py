@@ -38,12 +38,16 @@ if uploaded_file:
             rft_percentage = round((num_rft / num_new_artworks) * 100, 1)
             avg_amends = round(df["Amends"].mean(), 2)
 
+            over_v3 = df[df[client_col] > 3].shape[0]
+            over_v3_pct = round((over_v3 / num_new_artworks) * 100, 1)
+
             st.subheader("📈 Overall Stats")
             col1, col2, col3 = st.columns(3)
             col1.metric("New Artworks", num_new_artworks)
             col2.metric("Total Amends", total_amends)
             col3.metric("Right First Time", f"{rft_percentage}% ({num_rft})")
             st.metric("Average Amend Rate", avg_amends)
+            st.metric("Artworks Beyond V3", f"{over_v3} ({over_v3_pct}%)")
 
             # === Category Breakdown Tables ===
             summary = pd.DataFrame()
