@@ -35,7 +35,7 @@ if uploaded_file:
             num_new_artworks = len(df)
             total_amends = df["Amends"].sum()
             num_rft = df["Right First Time"].sum()
-            rft_percentage = round((num_rft / num_new_artworks) * 100, 2)
+            rft_percentage = round((num_rft / num_new_artworks) * 100, 1)
             avg_amends = round(df["Amends"].mean(), 2)
 
             st.subheader("📈 Overall Stats")
@@ -45,7 +45,7 @@ if uploaded_file:
             col3.metric("Right First Time", f"{rft_percentage}% ({num_rft})")
             st.metric("Average Amend Rate", avg_amends)
 
-            # === Category Breakdown Table ===
+            # === Category Breakdown Tables ===
             summary = pd.DataFrame()
             categories = sorted(df["Category"].dropna().unique())
             summary.loc["New Artwork Lines", categories] = df.groupby("Category").size()
@@ -55,8 +55,15 @@ if uploaded_file:
 
             summary_display = summary.reset_index().rename(columns={"index": ""})
 
-            st.subheader("📊 Category Breakdown Table")
-            st.dataframe(summary_display, use_container_width=True)
+            # Split into two tables
+            table_1 = summary_display[summary_display[""] != "Average Round of Amends"]
+            table_2 = summary_display[summary_display[""] == "Average Round of Amends"]
+
+            st.subheader("📊 Volume by Area")
+            st.dataframe(table_1, use_container_width=True)
+
+            st.subheader("Average Rounds of Amends by Area")
+            st.dataframe(table_2, use_container_width=True)
 
             # Optional export
             output = BytesIO()
