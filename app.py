@@ -31,7 +31,21 @@ if uploaded_file:
             df.loc[df["Category"].isin(["Members", "Starbuys"]), "Category"] = "Main Event"
             df.loc[df["Category"].isin(["Loyalty / CRM", "Mobile"]), "Category"] = "Other"
 
-            # Summary output table
+            # === Overall Stats ===
+            num_new_artworks = len(df)
+            total_amends = df["Amends"].sum()
+            num_rft = df["Right First Time"].sum()
+            rft_percentage = round((num_rft / num_new_artworks) * 100, 2)
+            avg_amends = round(df["Amends"].mean(), 2)
+
+            st.subheader("📈 Overall Stats")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("New Artworks", num_new_artworks)
+            col2.metric("Total Amends", total_amends)
+            col3.metric("Right First Time", f"{rft_percentage}% ({num_rft})")
+            st.metric("Average Amend Rate", avg_amends)
+
+            # === Category Breakdown Table ===
             summary = pd.DataFrame()
             categories = sorted(df["Category"].dropna().unique())
             summary.loc["New Artwork Lines", categories] = df.groupby("Category").size()
@@ -39,8 +53,8 @@ if uploaded_file:
             summary.loc["Right First Time", categories] = df.groupby("Category")["Right First Time"].sum()
             summary.loc["Average Round of Amends", categories] = df.groupby("Category")["Amends"].mean().round(2)
 
-            # Display
             summary_display = summary.reset_index().rename(columns={"index": ""})
+
             st.subheader("📊 Category Breakdown Table")
             st.dataframe(summary_display, use_container_width=True)
 
@@ -50,7 +64,7 @@ if uploaded_file:
                 summary_display.to_excel(writer, index=False, sheet_name="Summary")
 
             st.download_button(
-                label="📥 Download Summary Table",
+                label="📅 Download Summary Table",
                 data=output.getvalue(),
                 file_name="content_creation_summary.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -60,4 +74,4 @@ if uploaded_file:
         st.error("❌ There was an issue processing your file.")
         st.exception(e)
 else:
-    st.info("👆 Please upload a .xlsx file to get started.")
+    st.info("👇 Please upload a .xlsx file to get started.")
