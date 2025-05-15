@@ -1,46 +1,54 @@
+import streamlit as st
 import pandas as pd
 
-# Load the Excel file
-file_path = "Artwork_Versions_Client-13.xlsx"  # Update this path if needed
-xls = pd.ExcelFile(file_path)
+st.set_page_config(page_title="Monthly Artwork Analysis", layout="wide")
+st.title("🎨 Monthly Artwork Versions Analysis")
 
-# Load the sheet
-df = pd.read_excel(xls, sheet_name="general_report")
+st.markdown("Upload your Excel file below and we'll do the rest — amends, right-first-time stats, and all that good stuff 👇")
 
-# Step 1: Sort by column 8 (Client Versions) in descending order
-df = df.sort_values(by="Client Versions", ascending=False)
+uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
-# Step 2: Dedupe based on column 6 (POS Code)
-df = df.drop_duplicates(subset=["POS Code"], keep="first")
+if uploaded_file:
+    try:
+        xls = pd.ExcelFile(uploaded_file)
+        sheet_names = xls.sheet_names
+        st.success(f"✅ File uploaded. Found {len(sheet_names)} sheet(s): {', '.join(sheet_names)}")
 
-# Step 3: Remove any rows where Client Versions = 0
-df = df[df["Client Versions"] != 0]
+        df = pd.read_excel(xls, sheet_name="general_report")
 
-# Step 4: Create column 10 ("Amends") as Client Versions - 1
-df["Amends"] = df["Client Versions"] - 1
+        # Step-by-step transformation
+        df = df.sort_values(by="Client Versions", ascending=False)
+        df = df.drop_duplicates(subset=["POS Code"], keep="first")
+        df = df[df["Client Versions"] != 0]
+        df["Amends"] = df["Client Versions"] - 1
+        df["Right First Time"] = df["Client Versions"].apply(lambda x: 1 if x == 1 else 0)
+        df.loc[df["Project Description"].str.contains("ROI", na=False), "Category"] = "ROI"
+        df.loc[df["Category"].isin(["Members", "Starbuys"]), "Category"] = "Main Event"
+        df.loc[df["Category"].isin(["Loyalty / CRM", "Mobile"]), "Category"] = "Other"
 
-# Step 5: Create column 11 ("Right First Time")
-df["Right First Time"] = df["Client Versions"].apply(lambda x: 1 if x == 1 else 0)
+        # Stats
+        num_new_artworks = len(df)
+        total_amends = df["Amends"].sum()
+        num_rft = df["Right First Time"].sum()
+        rft_percentage = round((num_rft / num_new_artworks) * 100, 2)
+        avg_amends = round(df["Amends"].mean(), 2)
 
-# Step 6: If "ROI" in Project Description, set Category to "ROI"
-df.loc[df["Project Description"].str.contains("ROI", na=False), "Category"] = "ROI"
+        # Display
+        st.subheader("📊 Key Stats")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("New Artworks", num_new_artworks)
+        col2.metric("Total Amends", total_amends)
+        col3.metric("Right First Time", f"{rft_percentage}% ({num_rft})")
 
-# Step 7: Change Members/Starbuys category to "Main Event"
-df.loc[df["Category"].isin(["Members", "Starbuys"]), "Category"] = "Main Event"
+        st.metric("Average Amend Rate", avg_amends)
 
-# Step 8: Change Loyalty / CRM and Mobile to "Other"
-df.loc[df["Category"].isin(["Loyalty / CRM", "Mobile"]), "Category"] = "Other"
+        with st.expander("🔍 View Processed Data"):
+            st.dataframe(df, use_container_width=True)
 
-# Step 9: Calculate stats
-num_new_artworks = len(df)
-total_amends = df["Amends"].sum()
-num_right_first_time = df["Right First Time"].sum()
-right_first_time_percentage = (num_right_first_time / num_new_artworks) * 100
-average_amend_rate = round(df["Amends"].mean(), 2)
+        st.download_button("📥 Download Cleaned Data", df.to_excel(index=False), file_name="processed_artwork_data.xlsx")
 
-# Print results
-print("New artworks created:", num_new_artworks)
-print("Total rounds of amends:", total_amends)
-print("Right first time:", num_right_first_time)
-print("Right first time %:", f"{right_first_time_percentage:.2f}%")
-print("Average amend rate:", average_amend_rate)
+    except Exception as e:
+        st.error("❌ There was an issue processing your file.")
+        st.exception(e)
+else:
+    st.info("👆 Please upload a .xlsx file to get started.")
