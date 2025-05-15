@@ -63,6 +63,7 @@ with tab1:
                 table_1 = summary_display[summary_display[""] != "Average Round of Amends"]
                 table_2 = summary_display[summary_display[""] == "Average Round of Amends"]
 
+                st.markdown("Tables ready to paste into Keynote charts")
                 st.subheader("Volume by Area")
                 st.dataframe(table_1, use_container_width=True)
 
